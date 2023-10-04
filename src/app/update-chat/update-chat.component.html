@@ -1,0 +1,34 @@
+<div class="container">
+    <div>
+        <h2>Modifier un Chat :</h2>
+    </div>
+    <form>
+        <div hidden class="col-sm-2 col-md-2 col-lg-2">
+            <label>ID Chat</label>
+            <input readonly type="text" [(ngModel)]="currentChat.idChat" name="idChat" class="form-control">
+        </div>
+        <div class="col-sm-4 col-md-4 col-lg-4">
+            <label>Nom Chat</label>
+            <input type="text" [(ngModel)]="currentChat.nomChat" name="nomChat" class="form-control">
+        </div>
+        <div class="col-sm-2 col-md-2 col-lg-2">
+            <label>Prix Chat</label>
+            <input type="number" [(ngModel)]="currentChat.prixAdoption" name="prixAdoption" class="form-control">
+        </div>
+        <div class="col-sm-4 col-md-4 col-lg-4">
+            <label >Date de Naissance</label>
+            <input type="date" [ngModel]="currentChat.datenaissance | date: 'yyyy-MM-dd'
+            "(ngModelChange)=" currentChat.datenaissance= $event" name="datenaissance" class="form-control">
+        </div>
+        <div class="col-sm-4 col-md-4 col-lg-4">
+            <select class="form-control form-control-lg" id="idSou" name="idSou" [(ngModel)]="updatedSouId">
+            <option *ngFor="let sou of souches" [value]="sou.idSou" >
+            {{sou.nomSou}}
+            </option>
+            </select>
+            </div>
+        <div class="mt-2">
+            <button type="submit" (click)="updateChat()" class="btn btn-success">Modifer</button>
+        </div>
+    </form>
+</div>
