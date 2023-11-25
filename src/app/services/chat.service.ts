@@ -1,87 +1,130 @@
-import { Injectable } from '@angular/core';
-import { Chat } from '../model/chat.model';
-import { Souche } from '../model/souche.model';
-import { Observable } from 'rxjs';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { apiURL } from '../config';
 import { SoucheWrapper } from '../model/SoucheWarpped';
+import { Chat } from '../model/chat.model';
+import { Image } from '../model/image.model';
+import { Souche } from '../model/souche.model';
+import { AuthService } from './auth.service';
+
 const httpOptions = {
-  headers: new HttpHeaders( {'Content-Type': 'application/json'} )
+  headers: new HttpHeaders({ 'Content-Type': 'application/json' })
 };
 
+
 @Injectable({
-providedIn: 'root'
+  providedIn: 'root'
 })
 export class ChatService {
-chats! : Chat[]; //un tableau de Chat
-//souches : Souche[];
-apiURL: string = 'http://localhost:8082/chats/api';
-apiURLSou: string = 'http://localhost:8082/chats/sou';
 
 
-constructor(private http : HttpClient) {
+  apiURLSou: string = 'http://localhost:8082/chats/sou';
 
-  /* this.souches = [ {idSou : 1, nomSou : "aarbi",descriptionSou : "souche de chat"},
-  {idSou : 2, nomSou : "persan",descriptionSou : "souche de chat"}];  */ 
-/* this.chats = [
-{ idChat : 1, nomChat : "chat1", prixAdoption : 50.600, dateNaissance: new Date("01/14/2011"), souche : {idSou : 1, nomSou : "aarbi",descriptionSou : "souche de chat"}},
-{ idChat : 2, nomChat : "chat2", prixAdoption : 50, dateNaissance : new Date("12/17/2010"), souche : {idSou : 2, nomSou : "aarbi",descriptionSou : "souche de chat"}},
-{ idChat : 3, nomChat :"chat3", prixAdoption : 90.123, dateNaissance : new Date("02/20/2020"), souche : {idSou : 3, nomSou : "aarbi",descriptionSou : "souche de chat"}}
-]; */
-}
-listeChat(): Observable<Chat[]>{
-  return this.http.get<Chat[]>(this.apiURL);
+
+  chats!: Chat[];
+  //souches : Souche[];
+
+
+  constructor(private http: HttpClient,
+    private authService: AuthService) {
+
+
+  }
+
+  listeChat(): Observable<Chat[]> {
+    let jwt = this.authService.getToken();
+    jwt = "Bearer " + jwt;
+    let httpHeaders = new HttpHeaders({ "Authorization": jwt })
+
+    return this.http.get<Chat[]>(apiURL + "/all", { headers: httpHeaders });
+
+  }
+
+  ajouterChat(ch: Chat): Observable<Chat> {
+    let jwt = this.authService.getToken();
+    jwt = "Bearer " + jwt;
+    let httpHeaders = new HttpHeaders({ "Authorization": jwt })
+    return this.http.post<Chat>(apiURL + "/addchat", ch, { headers: httpHeaders });
+  }
+
+
+
+  supprimerChat(id: number) {
+    const url = `${apiURL}/delchat/${id}`;
+    let jwt = this.authService.getToken();
+    jwt = "Bearer " + jwt;
+    let httpHeaders = new HttpHeaders({ "Authorization": jwt })
+    return this.http.delete(url, { headers: httpHeaders });
+  }
+
+  consulterChat(id: number): Observable<Chat> {
+    const url = `${apiURL}/getbyid/${id}`;
+    console.log(url);
+    let jwt = this.authService.getToken();
+    jwt = "Bearer " + jwt;
+    let httpHeaders = new HttpHeaders({ "Authorization": jwt })
+    return this.http.get<Chat>(url, { headers: httpHeaders });
+  }
+
+  updateChat(ch: Chat): Observable<Chat> {
+    console.log("chatttttt " + ch);
+    console.log(ch.souche);
+    let jwt = this.authService.getToken();
+    jwt = "Bearer " + jwt;
+    let httpHeaders = new HttpHeaders({ "Authorization": jwt })
+    return this.http.put<Chat>(apiURL + "/updatechat", ch, { headers: httpHeaders });
+  }
+
+
+
+  listeSouches(): Observable<SoucheWrapper> {
+    let jwt = this.authService.getToken();
+    jwt = "Bearer " + jwt;
+    let httpHeaders = new HttpHeaders({ "Authorization": jwt })
+    return this.http.get<SoucheWrapper>(this.apiURLSou, { headers: httpHeaders });
+
+  }
+
+  rechercherParSouche(idSou: number): Observable<Chat[]> {
+    const url = `${apiURL}/chatsou/${idSou}`;
+    return this.http.get<Chat[]>(url);
+  }
+
+  rechercherParNom(nom: string): Observable<Chat[]> {
+    const url = `${apiURL}/chatsByName/${nom}`;
+    return this.http.get<Chat[]>(url);
+  }
+
+  ajouterSouche(sou: Souche): Observable<Souche> {
+    return this.http.post<Souche>(this.apiURLSou, sou, httpOptions);
   }
   
-  ajouterChat( ch: Chat):Observable<Chat>{
-    return this.http.post<Chat>(this.apiURL, ch, httpOptions);
+  uploadImage(file: File, filename: string): Observable<Image>{
+    const imageFormData = new FormData();
+    imageFormData.append('image', file, filename);
+    const url = `${apiURL + '/image/upload'}`;
+    return this.http.post<Image>(url, imageFormData);
     }
 
-    supprimerChat(id : number) {
-      const url = `${this.apiURL}/${id}`;
-      return this.http.delete(url, httpOptions);
+
+    loadImage(id: number): Observable<Image> {
+      const url = `${apiURL + '/image/get/info'}/${id}`;
+      return this.http.get<Image>(url);
       }
-      
-  chat! : Chat;
-  consulterChat(id: number): Observable<Chat> {
-    const url = `${this.apiURL}/${id}`;
-    return this.http.get<Chat>(url);
-    }
-    
-
- 
-      
-
-    updateChat(ch :Chat) : Observable<Chat>
-    {
-    return this.http.put<Chat>(this.apiURL, ch, httpOptions);
-    }
-      trierChats() {
-        this.chats = this.chats.sort((n1, n2) => {
-          if (n1.idChat! > n2.idChat!) {
-            return 1;
-          }
-          if (n1.idChat! < n2.idChat!) {
-            return -1;
-          }
-          return 0;
-        });
-      }
-      listeSouches():Observable<SoucheWrapper>{
-        return this.http.get<SoucheWrapper>(this.apiURLSou);
+      uploadImageChat(file: File, filename: string, idChat:number): Observable<any>{
+        const imageFormData = new FormData();
+        imageFormData.append('image', file, filename);
+        const url = `${apiURL + '/image/uplaodImageProd'}/${idChat}`;
+        return this.http.post(url, imageFormData);
         }
+        supprimerImage(id : number) {
+          const url = `${apiURL}/image/delete/${id}`;
+          return this.http.delete(url, httpOptions);
+          }
+          
+        
 
-        rechercherParSouche(idSou: number):Observable< Chat[]> {
-          const url = `${this.apiURL}/chatsou/${idSou}`;
-          return this.http.get<Chat[]>(url);
-          } 
-          rechercherParNom(nom: string):Observable< Chat[]> {
-            const url = `${this.apiURL}/chatsByName/${nom}`;
-            return this.http.get<Chat[]>(url);
-            }
-              
-        
-            
-        
-        
-  
+
+
 }
